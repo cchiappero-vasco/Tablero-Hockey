@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
 <meta name="robots" content="noindex">
 <title>Tablero Hockey — Ingresar</title>
 <style>
@@ -40,7 +40,7 @@ document.getElementById('f').addEventListener('submit', async function(e){
     var r=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({user:document.getElementById('u').value,password:document.getElementById('p').value})});
     var d=await r.json();
-    if(r.ok){ location.href='/'; return; }
+    if(r.ok){ try{document.activeElement.blur();}catch(e){} setTimeout(function(){ location.href='/'; },450); return; }
     err.textContent=d.error||'No se pudo ingresar';
   }catch(x){ err.textContent='Sin conexión. Intentá de nuevo.'; }
   b.disabled=false;

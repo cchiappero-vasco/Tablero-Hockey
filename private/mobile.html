@@ -1320,7 +1320,7 @@ checkOrientation();
 // Reduce el contenido (sin cortarlo) hasta que entre completo en la pantalla del teléfono.
 (function(){
   let z=1, busy=false;
-  function fit(reset){
+  let fit=function(reset){
     const tc=document.querySelector('.tab-content'), pane=document.querySelector('.tab-pane.active');
     if(!tc||!pane||busy) return;
     busy=true;
@@ -1333,6 +1333,10 @@ checkOrientation();
     tc.style.overflowY=fits()?'hidden':'auto'; // si entra completo no hace falta deslizar
     busy=false;
   }
+  let lastKey='';
+  const keyNow=()=>{ const tc=document.querySelector('.tab-content'); return tc? tc.clientWidth+'x'+tc.clientHeight+'|'+(matchMedia('(orientation:landscape) and (max-height:500px)').matches?'L':'P') : ''; };
+  const origFit=fit;
+  fit=function(r){ origFit(r); lastKey=keyNow(); };
   window.fitScreen=fit;
   let t=null;
   // Con el teclado del teléfono abierto la pantalla "se achica": no hay que reajustar nada en ese momento.
@@ -1346,6 +1350,18 @@ checkOrientation();
   if(window.ResizeObserver){ let raf=0; const ro=new ResizeObserver(()=>{ if(busy||typing()) return; cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>fit(false)); });
     document.querySelectorAll('.tab-pane').forEach(p=>ro.observe(p)); }
   fit(true);
+  [300,1000,2500].forEach(ms=>setTimeout(()=>{ if(!typing()) fit(true); },ms));
+  window.addEventListener('pageshow',()=>later(200));
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',()=>later(250));
+  // Vigilante: si cambió el espacio disponible (teclado, barra del navegador, giro) o algo quedó cortado, reacomoda.
+  setInterval(()=>{
+    if(document.hidden||typing()||busy) return;
+    const tc=document.querySelector('.tab-content'), pane=document.querySelector('.tab-pane.active');
+    if(!tc||!pane) return;
+    if(keyNow()!==lastKey){ fit(true); return; }
+    const cut=pane.getBoundingClientRect().bottom>tc.getBoundingClientRect().bottom+2 && z>0.5;
+    if(cut) fit(false);
+  },700);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>fit(true));
   window.addEventListener('load',()=>fit(true));
 })();
