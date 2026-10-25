@@ -15,6 +15,12 @@ export async function GET(request) {
   if (!s) return new Response(null, { status: 302, headers: { location: '/login', 'cache-control': 'no-store' } });
   if (p === 'admin' && s.role !== 'admin') return new Response(null, { status: 302, headers: { location: '/', 'cache-control': 'no-store' } });
 
+  // Los teléfonos van a la versión celular (con ?desktop=1 se puede forzar la de escritorio)
+  const ua = request.headers.get('user-agent') || '';
+  if (p === 'index' && !url.searchParams.has('desktop') && /Android.*Mobile|iPhone|iPod|Windows Phone/i.test(ua)) {
+    return new Response(null, { status: 302, headers: { location: '/mobile.html', 'cache-control': 'no-store' } });
+  }
+
   let html = await readFile(join(process.cwd(), 'private', file), 'utf8');
   if (p !== 'admin') html = html.replace('</body>', chipHtml(s.name, s.role === 'admin') + '</body>');
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
