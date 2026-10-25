@@ -1377,6 +1377,22 @@ checkOrientation();
   window.addEventListener('load',()=>fit(true));
 })();
 
+// ══ DIAGNÓSTICO (solo con ?debug=1) ══
+(function(){
+  if(!/[?&]debug=1/.test(location.search)) return;
+  const d=document.createElement('pre');
+  d.style.cssText='position:fixed;left:0;top:0;z-index:99999;margin:0;padding:3px 5px;background:#000c;color:#0f0;font:10px/1.25 monospace;pointer-events:none;white-space:pre';
+  document.documentElement.appendChild(d);
+  const upd=()=>{ const v=window.visualViewport||{}, tc=document.querySelector('.tab-content'), pane=document.querySelector('.tab-pane.active'), h=document.querySelector('.app-header'), m=document.querySelector('meta[name=viewport]');
+    d.textContent=['inner '+innerWidth+'x'+innerHeight,'docCW '+document.documentElement.clientWidth+' docSW '+document.documentElement.scrollWidth,
+      'vv '+(v.width&&v.width.toFixed(0))+'x'+(v.height&&v.height.toFixed(0))+' sc '+(v.scale&&v.scale.toFixed(2))+' off '+(v.offsetLeft)+','+(v.offsetTop),
+      'screen '+screen.width+'x'+screen.height+' dpr '+devicePixelRatio,'tc '+(tc&&tc.clientWidth)+'x'+(tc&&tc.clientHeight),
+      'pane '+(pane&&pane.style.width)+' '+(pane&&pane.style.transform),'hdr '+(h&&h.offsetWidth)+'x'+(h&&h.offsetHeight),
+      'ov '+(function(){const o=document.getElementById('setupOverlay');if(!o)return'-';const r=o.getBoundingClientRect();return r.left.toFixed(0)+','+r.top.toFixed(0)+' '+r.width.toFixed(0)+'x'+r.height.toFixed(0)})(),
+      'sx '+scrollX+' sy '+scrollY,(m&&m.content.slice(0,40))].join('\n'); };
+  upd(); setInterval(upd,500);
+})();
+
 // ══ WAKE LOCK — mantiene la pantalla encendida ══
 let wakeLock = null;
 
