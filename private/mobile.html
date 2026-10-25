@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1334,11 +1334,16 @@ checkOrientation();
     busy=false;
   }
   window.fitScreen=fit;
-  let t=null; const later=(ms)=>{clearTimeout(t);t=setTimeout(()=>fit(true),ms)};
+  let t=null;
+  // Con el teclado del teléfono abierto la pantalla "se achica": no hay que reajustar nada en ese momento.
+  const typing=()=>{ const a=document.activeElement; return !!a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && !a.closest('.setup-overlay'); };
+  const later=(ms)=>{clearTimeout(t);t=setTimeout(()=>{ if(!typing()) fit(true); },ms)};
+  document.addEventListener('focusin',()=>{ if(typing()){ const tc=document.querySelector('.tab-content'); if(tc) tc.style.overflowY='auto'; } });
+  document.addEventListener('focusout',()=>later(350));
   window.addEventListener('resize',()=>later(150));
   window.addEventListener('orientationchange',()=>later(400));
   const st=window.switchTab; window.switchTab=function(){ st.apply(this,arguments); requestAnimationFrame(()=>fit(true)); };
-  if(window.ResizeObserver){ let raf=0; const ro=new ResizeObserver(()=>{ if(busy) return; cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>fit(false)); });
+  if(window.ResizeObserver){ let raf=0; const ro=new ResizeObserver(()=>{ if(busy||typing()) return; cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>fit(false)); });
     document.querySelectorAll('.tab-pane').forEach(p=>ro.observe(p)); }
   fit(true);
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>fit(true));

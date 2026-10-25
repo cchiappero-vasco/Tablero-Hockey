@@ -27,7 +27,7 @@ export function chipHtml(name, isAdmin) {
       var ha=hd.querySelector('.header-actions');
       if(mq.matches&&ha){ ha.insertBefore(c,ha.firstChild); if(st) st.style.display='none'; }
       else { if(!st){ st=document.createElement('div'); st.id='hk-strip'; hd.parentNode.insertBefore(st,hd); } st.style.display='flex'; st.appendChild(c); }
-      if(window.fitScreen) setTimeout(function(){window.fitScreen(true)},30);
+      var ae=(document.activeElement||{}).tagName||''; if(window.fitScreen&&!/^(INPUT|SELECT|TEXTAREA)$/.test(ae)) setTimeout(function(){window.fitScreen(true)},30);
     };
     place();
     if(mq.addEventListener) mq.addEventListener('change',place); else if(mq.addListener) mq.addListener(place);
