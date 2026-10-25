@@ -693,6 +693,7 @@ let goals={ local:[], visit:[] };
 let partialSc={ local:0, visit:0 };
 let goalNowA={ local:null, visit:null };
 let raf=null, lastT=null;
+let frac=0, soFrac=0;
 
 function computeAcc(){
   if(st.isBreak) return st.period*cfg.duration;
@@ -805,20 +806,21 @@ function refreshDots(){
 function togglePlay(){ st.running?pause():play(); }
 function play(){
   if(st.remaining<=0) return;
-  st.running=true; lastT=performance.now();
+  st.running=true; lastT=Date.now();frac=0;
   raf=requestAnimationFrame(tick); updateUI();
 }
 function pause(){
   st.running=false; if(raf) cancelAnimationFrame(raf); raf=null; updateUI();
 }
-function tick(now){
-  const dt=now-lastT; lastT=now;
-  const dcs=Math.round(dt/10);
-  st.remaining=Math.max(0,st.remaining-dcs);
+function tick(){
+  if(!st.running) return;
+  const now=Date.now(); let dt=now-lastT; lastT=now; if(dt<0) dt=0;
+  frac+=dt/10; const whole=Math.floor(frac); frac-=whole;
+    st.remaining=Math.max(0,st.remaining-whole);
   tickPenalties();
   if(st.remaining<=0){ st.running=false; updateDisplay(); onEnd(); return; }
   updateDisplay();
-  raf=requestAnimationFrame(tick);
+  if(raf) cancelAnimationFrame(raf); raf=requestAnimationFrame(tick);
 }
 function onEnd(){
   beepPeriod();
@@ -1187,7 +1189,7 @@ let soRaf=null, soLastT=null;
 function toggleSoTimer(){ soState.running?pauseSoTimer():playSoTimer(); }
 function playSoTimer(){
   if(soState.remaining<=0) return;
-  soState.running=true; soLastT=performance.now();
+  soState.running=true; soLastT=Date.now();soFrac=0;
   soRaf=requestAnimationFrame(soTick); updateSoUI();
 }
 function pauseSoTimer(){
@@ -1196,12 +1198,14 @@ function pauseSoTimer(){
 function resetSoTimer(){
   pauseSoTimer(); soState.remaining=800; updateSoDisplay();
 }
-function soTick(now){
-  const dt=now-soLastT; soLastT=now;
-  soState.remaining=Math.max(0,soState.remaining-Math.round(dt/10));
+function soTick(){
+  if(!soState.running) return;
+  const now=Date.now(); let dt=now-soLastT; soLastT=now; if(dt<0) dt=0;
+  soFrac+=dt/10; const whole=Math.floor(soFrac); soFrac-=whole;
+  soState.remaining=Math.max(0,soState.remaining-whole);
   updateSoDisplay();
   if(soState.remaining<=0){ soState.running=false; beepSoEnd(); updateSoUI(); return; }
-  soRaf=requestAnimationFrame(soTick);
+  if(soRaf) cancelAnimationFrame(soRaf); soRaf=requestAnimationFrame(soTick);
 }
 function updateSoDisplay(){
   const rem=Math.max(0,soState.remaining);
@@ -1287,6 +1291,14 @@ document.addEventListener('visibilitychange', () => {
 // Pedir wake lock al inicio
 requestWakeLock();
 
+
+// ══ RELOJ EN SEGUNDO PLANO ══
+// El tiempo se calcula con el reloj real (Date.now): si la pantalla se apaga o la página queda en
+// segundo plano, al volver se descuenta todo el tiempo transcurrido y el cronómetro sigue en hora.
+setInterval(function(){ if(document.hidden){ if(st.running) tick(); if(soState.running) soTick(); } },500);
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){ if(st.running) tick(); if(soState.running) soTick(); }
+});
 </script>
 </body>
 </html>
