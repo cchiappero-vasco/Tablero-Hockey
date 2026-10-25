@@ -1,0 +1,12 @@
+{
+  "outputDirectory": "public",
+  "functions": { "api/app.js": { "includeFiles": "private/**" } },
+  "rewrites": [
+    { "source": "/", "destination": "/api/app?p=index" },
+    { "source": "/index.html", "destination": "/api/app?p=index" },
+    { "source": "/mobile", "destination": "/api/app?p=mobile" },
+    { "source": "/mobile.html", "destination": "/api/app?p=mobile" },
+    { "source": "/admin", "destination": "/api/app?p=admin" },
+    { "source": "/login", "destination": "/login.html" }
+  ]
+}
