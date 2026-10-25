@@ -32,7 +32,7 @@ export function chipHtml(name, isAdmin) {
     place();
     if(mq.addEventListener) mq.addEventListener('change',place); else if(mq.addListener) mq.addListener(place);
   }
-  c.querySelector('.hk-out').onclick=async function(e){e.preventDefault();try{await fetch('/api/logout',{method:'POST'})}catch(x){}location.href='/login';};
+  c.querySelector('.hk-out').onclick=async function(e){e.preventDefault();try{await fetch('/api/logout',{method:'POST'})}catch(x){}location.replace('/login');};
 })();
 </script>`;
 }

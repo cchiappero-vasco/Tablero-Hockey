@@ -1363,7 +1363,7 @@ checkOrientation();
   // Si el navegador del teléfono cambió el zoom por su cuenta (achicó o agrandó la página), lo devuelve a 100%.
   const metaV=document.querySelector('meta[name=viewport]'), metaTxt=metaV&&metaV.content;
   const resetZoom=()=>{ if(!metaV) return; metaV.content=metaTxt.replace('initial-scale=1.0','initial-scale=1.0001'); setTimeout(()=>{ metaV.content=metaTxt; later(200); },60); };
-  const zoomBad=()=>{ const v=window.visualViewport; return (v&&Math.abs(v.scale-1)>0.02) || document.documentElement.scrollWidth>window.innerWidth+2; };
+  const zoomBad=()=>{ const v=window.visualViewport; return (v&&(Math.abs(v.scale-1)>0.02||Math.abs(v.width-document.documentElement.clientWidth)>3)) || document.documentElement.scrollWidth>window.innerWidth+2; };
   setInterval(()=>{
     if(document.hidden||typing()||busy) return;
     const tc=document.querySelector('.tab-content'), pane=document.querySelector('.tab-pane.active');
