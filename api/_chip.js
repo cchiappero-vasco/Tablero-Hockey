@@ -20,7 +20,18 @@ export function chipHtml(name, isAdmin) {
   var c=document.createElement('div'); c.id='hk-user';
   c.innerHTML='<span class="hk-n">👤 ${esc(name)}</span>${isAdmin ? '<a class="hk-adm" href="/admin">Usuarios</a>' : ''}<a class="hk-out" href="#">Salir</a>';
   if(hr){ hr.appendChild(c); }
-  else { var st=document.createElement('div'); st.id='hk-strip'; st.appendChild(c); hd.parentNode.insertBefore(st,hd); }
+  else {
+    // celular: en horizontal va dentro del encabezado; en vertical, en una franja fina arriba
+    var mq=window.matchMedia('(orientation:landscape) and (max-height:500px)'), st=null;
+    var place=function(){
+      var ha=hd.querySelector('.header-actions');
+      if(mq.matches&&ha){ ha.insertBefore(c,ha.firstChild); if(st) st.style.display='none'; }
+      else { if(!st){ st=document.createElement('div'); st.id='hk-strip'; hd.parentNode.insertBefore(st,hd); } st.style.display='flex'; st.appendChild(c); }
+      if(window.fitScreen) setTimeout(function(){window.fitScreen(true)},30);
+    };
+    place();
+    if(mq.addEventListener) mq.addEventListener('change',place); else if(mq.addListener) mq.addListener(place);
+  }
   c.querySelector('.hk-out').onclick=async function(e){e.preventDefault();try{await fetch('/api/logout',{method:'POST'})}catch(x){}location.href='/login';};
 })();
 </script>`;

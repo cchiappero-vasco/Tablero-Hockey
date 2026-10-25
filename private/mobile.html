@@ -427,6 +427,31 @@ body.light .tabs-bar{background:rgba(240,242,247,.97)}
   .so-cs{font-size:clamp(1rem,5vh,1.6rem)}
   .so-list{max-height:80px}
 }
+
+/* ══ AJUSTE A PANTALLA ══ */
+.tab-pane{transform-origin:0 0}
+.app-header>div:nth-child(2){min-width:0}
+@media (max-width:380px){
+  .app-title{font-size:.7rem;letter-spacing:1px}
+  .header-actions{gap:4px}
+  .app-header{padding:5px 8px;gap:5px}
+}
+@media (orientation:landscape) and (max-height:500px){
+  .app-header{padding:3px 10px}
+  .tab-btn{padding:6px 8px}
+  /* goles arriba, penalidades debajo de cada equipo, cronómetro al centro */
+  #tab-match.active{display:grid;grid-template-columns:24% minmax(0,1fr) 24%;column-gap:5px;row-gap:4px;align-items:start}
+  #tab-match .match-wrapper,#tab-match .score-row-portrait,#tab-match .pen-section{display:contents}
+  #tab-match .match-local{grid-column:1;grid-row:1}
+  #tab-match .match-clock{grid-column:2;grid-row:1 / span 2}
+  #tab-match .match-visit{grid-column:3;grid-row:1}
+  #tab-match .pen-panel.local{grid-column:1;grid-row:2}
+  #tab-match .pen-panel.visit{grid-column:3;grid-row:2}
+  /* cronómetro más grande en horizontal (hay lugar en la columna central) */
+  .t-part{font-size:clamp(2.4rem,16vh,4.8rem)}
+  .t-colon{font-size:clamp(2.1rem,14vh,4.3rem)}
+  .t-cs{font-size:clamp(.9rem,5.5vh,1.7rem)}
+}
 </style>
 </head>
 <body>
@@ -1285,6 +1310,35 @@ populatePresetSelects();
 buildBreakInputs();
 updateSoDisplay();updateSoUI();
 checkOrientation();
+
+// ══ AJUSTE A PANTALLA ══
+// Reduce el contenido (sin cortarlo) hasta que entre completo en la pantalla del teléfono.
+(function(){
+  let z=1, busy=false;
+  function fit(reset){
+    const tc=document.querySelector('.tab-content'), pane=document.querySelector('.tab-pane.active');
+    if(!tc||!pane||busy) return;
+    busy=true;
+    if(reset){ z=1; document.querySelectorAll('.tab-pane').forEach(p=>{p.style.width='';p.style.transform='';}); }
+    const W=tc.clientWidth, H=tc.clientHeight;
+    const set=()=>{ pane.style.width=(W/z)+'px'; pane.style.transform=z<1?'scale('+z+')':''; };
+    const fits=()=>pane.offsetHeight*z<=H+1 && pane.scrollWidth<=pane.clientWidth+1;
+    set();
+    while(!fits() && z>0.5){ z=Math.max(0.5,+(z-0.02).toFixed(2)); set(); }
+    tc.style.overflowY=fits()?'hidden':'auto'; // si entra completo no hace falta deslizar
+    busy=false;
+  }
+  window.fitScreen=fit;
+  let t=null; const later=(ms)=>{clearTimeout(t);t=setTimeout(()=>fit(true),ms)};
+  window.addEventListener('resize',()=>later(150));
+  window.addEventListener('orientationchange',()=>later(400));
+  const st=window.switchTab; window.switchTab=function(){ st.apply(this,arguments); requestAnimationFrame(()=>fit(true)); };
+  if(window.ResizeObserver){ let raf=0; const ro=new ResizeObserver(()=>{ if(busy) return; cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>fit(false)); });
+    document.querySelectorAll('.tab-pane').forEach(p=>ro.observe(p)); }
+  fit(true);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>fit(true));
+  window.addEventListener('load',()=>fit(true));
+})();
 
 // ══ WAKE LOCK — mantiene la pantalla encendida ══
 let wakeLock = null;
